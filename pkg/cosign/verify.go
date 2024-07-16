@@ -310,7 +310,17 @@ func CheckCertificatePolicy(cert *x509.Certificate, co *CheckOpts) error {
 		return err
 	}
 	oidcIssuer := ce.GetIssuer()
+	if oidcIssuer == "" {
+		oidcIssuer = cert.Issuer.String()
+		fmt.Fprintf(os.Stderr, "**Info** No issuer information in extensions, falling back to Issuer:%s\n",oidcIssuer)
+	}
+
 	sans := cryptoutils.GetSubjectAlternateNames(cert)
+	if len(sans) == 0 {
+		sans = append(sans,cert.Subject.String())
+		fmt.Fprintf(os.Stderr, "**Info** No Subject Alternate Names, falling back to Subject:%s\n",cert.Subject)
+	}
+
 	// If there are identities given, go through them and if one of them
 	// matches, call that good, otherwise, return an error.
 	if len(co.Identities) > 0 {
